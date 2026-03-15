@@ -1,12 +1,17 @@
 import streamlit as st
+from pathlib import Path
+from PIL import Image
 from db import run_query
+
+favicon = Image.open(Path(__file__).parent / "favicon_v1.png")
 
 st.set_page_config(
     page_title="Workforce Analytics",
-    page_icon="👥",
+    page_icon=favicon,
     layout="wide",
 )
 
+st.markdown("<style>footer {visibility: hidden;}</style>", unsafe_allow_html=True)
 st.title("👥 Workforce Analytics Dashboard")
 st.markdown(
     "Explore simulated employee records spanning 11 years for a fictional tech company — "
