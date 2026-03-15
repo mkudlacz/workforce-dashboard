@@ -15,6 +15,30 @@ start_date, end_date = render_sidebar_filter()
 
 
 @st.cache_data
+def load_overview():
+    """All-time dataset metrics and current active HC by department."""
+    emp = run_query("""
+        SELECT
+            COUNT(*)                                              AS total_ever,
+            SUM(CASE WHEN Status='Active'     THEN 1 ELSE 0 END) AS active,
+            SUM(CASE WHEN Status='Terminated' THEN 1 ELSE 0 END) AS terminated
+        FROM employees
+    """)
+    snap = run_query("""
+        SELECT COUNT(DISTINCT SnapDate) AS snap_weeks, COUNT(*) AS total_rows
+        FROM snapshots
+    """)
+    dept = run_query("""
+        SELECT Department, COUNT(*) AS n
+        FROM employees
+        WHERE Status = 'Active'
+        GROUP BY Department
+        ORDER BY n DESC
+    """)
+    return emp, snap, dept
+
+
+@st.cache_data
 def load_data(start_date: str, end_date: str):
     # Weekly active headcount
     hc = run_query(f"""
@@ -63,50 +87,37 @@ def load_data(start_date: str, end_date: str):
         ORDER BY month
     """)
 
-    # Dept-level HC summary: active HC + hires/terms by type in period
-    dept_summary = run_query(f"""
-        SELECT
-            e.Department,
-            SUM(CASE WHEN DATE(e.HireDate) BETWEEN '{start_date}' AND '{end_date}'
-                     THEN 1 ELSE 0 END)                                              AS Hires,
-            SUM(CASE WHEN e.ResignationType = 'Voluntary'
-                      AND DATE(e.TerminationDate) BETWEEN '{start_date}' AND '{end_date}'
-                     THEN 1 ELSE 0 END)                                              AS VolTerms,
-            SUM(CASE WHEN e.ResignationType = 'Involuntary'
-                      AND DATE(e.TerminationDate) BETWEEN '{start_date}' AND '{end_date}'
-                     THEN 1 ELSE 0 END)                                              AS InvolTerms,
-            SUM(CASE WHEN e.ResignationType = 'Layoff'
-                      AND DATE(e.TerminationDate) BETWEEN '{start_date}' AND '{end_date}'
-                     THEN 1 ELSE 0 END)                                              AS Layoffs
-        FROM employees e
-        GROUP BY e.Department
-    """)
-    as_of = f"(SELECT MAX(SnapDate) FROM snapshots WHERE SnapDate <= '{end_date}')"
-    active_by_dept = run_query(f"""
-        SELECT Department, COUNT(*) AS ActiveHC
-        FROM snapshots
-        WHERE SnapDate = {as_of} AND Status = 'Active'
-        GROUP BY Department
-    """)
-    dept_summary = (
-        active_by_dept
-        .merge(dept_summary, on='Department', how='left')
-        .fillna(0)
-    )
-    dept_summary['Net'] = (
-        dept_summary['Hires']
-        - dept_summary['VolTerms']
-        - dept_summary['InvolTerms']
-        - dept_summary['Layoffs']
-    ).astype(int)
-    for col in ['Hires', 'VolTerms', 'InvolTerms', 'Layoffs']:
-        dept_summary[col] = dept_summary[col].astype(int)
-    dept_summary = dept_summary.sort_values('ActiveHC', ascending=False)
-
-    return hc, hc_dept_monthly, hires, terms, dept_summary
+    return hc, hc_dept_monthly, hires, terms
 
 
-hc, hc_dept_monthly, hires, terms, dept_summary = load_data(start_date, end_date)
+emp, snap, dept = load_overview()
+hc, hc_dept_monthly, hires, terms = load_data(start_date, end_date)
+
+# ── Key metrics ───────────────────────────────────────────────────────────────
+st.caption("Dataset totals — reflect the full simulation history and do not change with the sidebar date filter.")
+c1, c2, c3, c4, c5 = st.columns(5)
+c1.metric("Currently Active",          f"{int(emp['active'][0]):,}")
+c2.metric("Terminated",                f"{int(emp['terminated'][0]):,}")
+c3.metric("Total Employees (All Time)", f"{int(emp['total_ever'][0]):,}")
+c4.metric("Weekly Snapshots",          f"{int(snap['snap_weeks'][0]):,}")
+c5.metric("Snapshot Rows",             f"{int(snap['total_rows'][0]) / 1e6:.2f}M")
+
+# ── Active headcount by department ────────────────────────────────────────────
+fig_dept = px.bar(
+    dept.sort_values('n', ascending=False),
+    x='n', y='Department', orientation='h',
+    color='Department', color_discrete_map=DEPT_COLORS,
+    labels={'n': 'Active Employees', 'Department': ''},
+)
+fig_dept.update_layout(
+    showlegend=False,
+    height=320,
+    margin=dict(l=0, r=20, t=20, b=20),
+)
+fig_dept.update_traces(texttemplate='%{x:,}', textposition='outside')
+st.plotly_chart(fig_dept, use_container_width=True)
+
+st.divider()
 
 # ── Chart 1: Active headcount over time ──────────────────────────────────────
 st.subheader("Active Headcount Over Time")
@@ -161,23 +172,3 @@ with col2:
         barmode='stack',
     )
     st.plotly_chart(fig3b, use_container_width=True)
-
-# ── Dept HC summary table ─────────────────────────────────────────────────────
-st.subheader(f"Headcount Summary by Department (as of {end_date})")
-st.dataframe(
-    dept_summary.rename(columns={
-        'Department': 'Department',
-        'ActiveHC':   'Active HC',
-        'Hires':      'Hires',
-        'VolTerms':   'Vol Terms',
-        'InvolTerms': 'Invol Terms',
-        'Layoffs':    'Layoffs',
-        'Net':        'Net (Hires − Terms)',
-    }),
-    hide_index=True,
-    use_container_width=True,
-)
-st.caption(
-    "Hires and terminations reflect the selected date range. Active HC is point-in-time as of "
-    "the period end date. Net does not account for cross-department moves — see Promotions & Moves for transfer detail."
-)
