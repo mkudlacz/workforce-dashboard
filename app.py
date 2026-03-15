@@ -45,9 +45,9 @@ def get_summary():
 emp, snap, dept = get_summary()
 
 c1, c2, c3, c4, c5 = st.columns(5)
-c1.metric("Total Employees Ever",  f"{int(emp['total_ever'][0]):,}")
-c2.metric("Currently Active",      f"{int(emp['active'][0]):,}")
-c3.metric("Terminated",            f"{int(emp['terminated'][0]):,}")
+c1.metric("Currently Active Employees",      f"{int(emp['active'][0]):,}")
+c2.metric("Terminated",            f"{int(emp['terminated'][0]):,}")
+c3.metric("Total Employees (All Time)",  f"{int(emp['total_ever'][0]):,}")
 c4.metric("Weekly Snapshots",      f"{int(snap['snap_weeks'][0]):,}")
 c5.metric("Snapshot Rows",         f"{int(snap['total_rows'][0]) / 1e6:.2f}M")
 
@@ -90,13 +90,13 @@ actually behaves — which makes it genuinely useful for building and testing an
 | Page | What you'll find |
 |---|---|
 | 📈 Headcount | Workforce size over time, hiring & attrition flows, dept composition |
-| 📉 Attrition | Organic vol/invol rates, RIF events, attrition by tenure/rating/dept |
+| 🌍 Demographics | Gender, race/ethnicity, location — current state and over time |
 | 🏢 Org Health | Span of control, org layers by dept, manager % over time |
 | 💬 Engagement & Performance | Engagement trends, RIF shocks, rating distribution, cross-tabs |
-| 🌍 Demographics | Gender, race/ethnicity, location — current state and over time |
+| 💡 Engagement Heatmap | Year × department engagement with sparklines |
+| 📉 Attrition | Organic vol/invol rates, RIF events, attrition by tenure/rating/dept |
 | 🔥 Attrition Heatmap | Year × department view, toggle by termination type |
 | 📊 Attrition Breakdown | Annual attrition trends faceted by department |
-| 💡 Engagement Heatmap | Year × department engagement with sparklines |
 | 🚀 Promotions & Moves | Band promotions, IC→manager conversions, cross-dept transfers |
 | 🔍 Employee Explorer | Filterable employee roster with engagement and rating detail |
 """)
