@@ -63,10 +63,50 @@ def load_data(start_date: str, end_date: str):
         ORDER BY month
     """)
 
-    return hc, hc_dept_monthly, hires, terms
+    # Dept-level HC summary: active HC + hires/terms by type in period
+    dept_summary = run_query(f"""
+        SELECT
+            e.Department,
+            SUM(CASE WHEN DATE(e.HireDate) BETWEEN '{start_date}' AND '{end_date}'
+                     THEN 1 ELSE 0 END)                                              AS Hires,
+            SUM(CASE WHEN e.ResignationType = 'Voluntary'
+                      AND DATE(e.TerminationDate) BETWEEN '{start_date}' AND '{end_date}'
+                     THEN 1 ELSE 0 END)                                              AS VolTerms,
+            SUM(CASE WHEN e.ResignationType = 'Involuntary'
+                      AND DATE(e.TerminationDate) BETWEEN '{start_date}' AND '{end_date}'
+                     THEN 1 ELSE 0 END)                                              AS InvolTerms,
+            SUM(CASE WHEN e.ResignationType = 'Layoff'
+                      AND DATE(e.TerminationDate) BETWEEN '{start_date}' AND '{end_date}'
+                     THEN 1 ELSE 0 END)                                              AS Layoffs
+        FROM employees e
+        GROUP BY e.Department
+    """)
+    as_of = f"(SELECT MAX(SnapDate) FROM snapshots WHERE SnapDate <= '{end_date}')"
+    active_by_dept = run_query(f"""
+        SELECT Department, COUNT(*) AS ActiveHC
+        FROM snapshots
+        WHERE SnapDate = {as_of} AND Status = 'Active'
+        GROUP BY Department
+    """)
+    dept_summary = (
+        active_by_dept
+        .merge(dept_summary, on='Department', how='left')
+        .fillna(0)
+    )
+    dept_summary['Net'] = (
+        dept_summary['Hires']
+        - dept_summary['VolTerms']
+        - dept_summary['InvolTerms']
+        - dept_summary['Layoffs']
+    ).astype(int)
+    for col in ['Hires', 'VolTerms', 'InvolTerms', 'Layoffs']:
+        dept_summary[col] = dept_summary[col].astype(int)
+    dept_summary = dept_summary.sort_values('ActiveHC', ascending=False)
+
+    return hc, hc_dept_monthly, hires, terms, dept_summary
 
 
-hc, hc_dept_monthly, hires, terms = load_data(start_date, end_date)
+hc, hc_dept_monthly, hires, terms, dept_summary = load_data(start_date, end_date)
 
 # ── Chart 1: Active headcount over time ──────────────────────────────────────
 st.subheader("Active Headcount Over Time")
@@ -121,3 +161,23 @@ with col2:
         barmode='stack',
     )
     st.plotly_chart(fig3b, use_container_width=True)
+
+# ── Dept HC summary table ─────────────────────────────────────────────────────
+st.subheader(f"Headcount Summary by Department (as of {end_date})")
+st.dataframe(
+    dept_summary.rename(columns={
+        'Department': 'Department',
+        'ActiveHC':   'Active HC',
+        'Hires':      'Hires',
+        'VolTerms':   'Vol Terms',
+        'InvolTerms': 'Invol Terms',
+        'Layoffs':    'Layoffs',
+        'Net':        'Net (Hires − Terms)',
+    }),
+    hide_index=True,
+    use_container_width=True,
+)
+st.caption(
+    "Hires and terminations reflect the selected date range. Active HC is point-in-time as of "
+    "the period end date. Net does not account for cross-department moves — see Promotions & Moves for transfer detail."
+)

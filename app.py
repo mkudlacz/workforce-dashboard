@@ -1,7 +1,8 @@
 import streamlit as st
 from pathlib import Path
 from PIL import Image
-from db import run_query
+import plotly.express as px
+from db import run_query, DEPT_COLORS
 
 favicon = Image.open(Path(__file__).parent / "favicon_v1.png")
 
@@ -31,10 +32,10 @@ def get_summary():
     """)
     snap = run_query("""
         SELECT
-            MIN(SnapDate)           AS start_date,
-            MAX(SnapDate)           AS end_date,
+            MIN(SnapDate)            AS start_date,
+            MAX(SnapDate)            AS end_date,
             COUNT(DISTINCT SnapDate) AS snap_weeks,
-            COUNT(*)                AS total_rows
+            COUNT(*)                 AS total_rows
         FROM snapshots
     """)
     dept = run_query("""
@@ -49,20 +50,84 @@ def get_summary():
 
 emp, snap, dept = get_summary()
 
+# ── Key metrics ───────────────────────────────────────────────────────────────
 c1, c2, c3, c4, c5 = st.columns(5)
-c1.metric("Currently Active Employees",      f"{int(emp['active'][0]):,}")
-c2.metric("Terminated",            f"{int(emp['terminated'][0]):,}")
-c3.metric("Total Employees (All Time)",  f"{int(emp['total_ever'][0]):,}")
-c4.metric("Weekly Snapshots",      f"{int(snap['snap_weeks'][0]):,}")
-c5.metric("Snapshot Rows",         f"{int(snap['total_rows'][0]) / 1e6:.2f}M")
+c1.metric("Currently Active",         f"{int(emp['active'][0]):,}")
+c2.metric("Terminated",               f"{int(emp['terminated'][0]):,}")
+c3.metric("Total Employees (All Time)", f"{int(emp['total_ever'][0]):,}")
+c4.metric("Weekly Snapshots",         f"{int(snap['snap_weeks'][0]):,}")
+c5.metric("Snapshot Rows",            f"{int(snap['total_rows'][0]) / 1e6:.2f}M")
+
+# ── Active headcount by department (horizontal bar) ───────────────────────────
+fig_dept = px.bar(
+    dept.sort_values('n', ascending=True),
+    x='n', y='Department', orientation='h',
+    color='Department', color_discrete_map=DEPT_COLORS,
+    labels={'n': 'Active Employees', 'Department': ''},
+)
+fig_dept.update_layout(
+    showlegend=False,
+    height=320,
+    margin=dict(l=0, r=20, t=20, b=20),
+    xaxis=dict(showgrid=True),
+)
+fig_dept.update_traces(texttemplate='%{x:,}', textposition='outside')
+st.plotly_chart(fig_dept, use_container_width=True)
 
 st.divider()
 
-col_left, col_right = st.columns([2, 1])
+# ── Page directory ────────────────────────────────────────────────────────────
+st.markdown(f"**Dataset range:** {snap['start_date'][0]}  →  {snap['end_date'][0]}")
 
-with col_left:
-    st.markdown(f"**Dataset range:** {snap['start_date'][0]}  →  {snap['end_date'][0]}")
-    st.markdown("""
+PAGES = [
+    ("pages/1_Headcount.py",              "📈 Headcount",
+     "Weekly active headcount trend, monthly dept composition as stacked area, "
+     "side-by-side monthly new hires vs. terminations by type, and a dept-level HC summary table."),
+    ("pages/2_Demographics.py",           "🌍 Demographics",
+     "Current-state pie charts for gender, race/ethnicity, and location. "
+     "Male/female % trend over time, race by department, and gender by job band — all as % bars."),
+    ("pages/3_Org_Health.py",             "🏢 Org Health",
+     "Span of control histogram, org layer depth by department, and manager % trend with 10%/25% benchmarks. "
+     "Whole-org and per-department centered pyramids showing IC vs. manager split by layer."),
+    ("pages/4_Engagement_Performance.py", "💬 Engagement & Performance",
+     "Engagement score distribution, mean trend with RIF event markers, and mean by department. "
+     "Performance rating distribution, mean engagement by rating tier, and rating mix by year — "
+     "all sourced from the annual March review cycle."),
+    ("pages/5_Engagement_Heatmap.py",     "💡 Engagement Heatmap",
+     "Year × department heatmap of mean engagement scores (red→green). "
+     "Org-wide 'All' row at top, departments sorted by average score. "
+     "Trend sparklines per department below. Covers full dataset — no date filter."),
+    ("pages/6_Attrition.py",              "📉 Attrition",
+     "Trailing twelve-month organic attrition rate (vol/invol stacked area) with RIF markers. "
+     "Monthly termination counts by type, and annualized attrition bars broken out three ways: "
+     "by department, by tenure band, and by performance rating."),
+    ("pages/7_Attrition_Heatmap.py",      "🗺️ Attrition Heatmap",
+     "Year × department attrition heatmap with a radio toggle for All / Voluntary / Involuntary / Layoff. "
+     "Org-wide 'All' row at top, departments sorted by highest average attrition. Covers full dataset."),
+    ("pages/8_Attrition_Breakdown.py",    "📊 Attrition Breakdown",
+     "Annual attrition stacked bars (vol/invol/layoff) faceted by department in a 3-column grid "
+     "with independent y-axes. Voluntary attrition trend lines for all departments overlaid."),
+    ("pages/9__Promotions.py",            "🚀 Promotions & Moves",
+     "Promotions detected via job band increases: Sankey flow by band, promotions by department, "
+     "quarterly trend, IC→manager conversions, and a promotion paths table. "
+     "Cross-department move events: top source→destination pairs, quarterly trend, and net flow by department."),
+    ("pages/10_Employee_Explorer.py",     "🔍 Employee Explorer",
+     "Full employee roster with sidebar filters for status, department, job band, manager flag, "
+     "rating, gender, location, engagement range, and resignation type. "
+     "Text search by name or ID. Shows manager quality tag and final-state attributes."),
+]
+
+for path, label, desc in PAGES:
+    c_link, c_desc = st.columns([2, 5])
+    with c_link:
+        st.page_link(path, label=label)
+    with c_desc:
+        st.markdown(f"<small>{desc}</small>", unsafe_allow_html=True)
+
+st.divider()
+
+# ── About ─────────────────────────────────────────────────────────────────────
+st.markdown("""
 **About this dataset**
 
 This is a fictional mid-size tech company — built from scratch in Python, one week at a time.
@@ -91,21 +156,4 @@ management cultures. Sales got the worst.
 The result is a dataset with real texture: seasonal patterns, RIF fingerprints, engagement
 divergence by department, tenure effects on attrition. It behaves the way workforce data
 actually behaves — which makes it genuinely useful for building and testing analytics.
-
-| Page | What you'll find |
-|---|---|
-| 📈 Headcount | Workforce size over time, hiring & attrition flows, dept composition |
-| 🌍 Demographics | Gender, race/ethnicity, location — current state and over time |
-| 🏢 Org Health | Span of control, org layers by dept, manager % over time |
-| 💬 Engagement & Performance | Engagement trends, RIF shocks, rating distribution, cross-tabs |
-| 💡 Engagement Heatmap | Year × department engagement with sparklines |
-| 📉 Attrition | Organic vol/invol rates, RIF events, attrition by tenure/rating/dept |
-| 🔥 Attrition Heatmap | Year × department view, toggle by termination type |
-| 📊 Attrition Breakdown | Annual attrition trends faceted by department |
-| 🚀 Promotions & Moves | Band promotions, IC→manager conversions, cross-dept transfers |
-| 🔍 Employee Explorer | Filterable employee roster with engagement and rating detail |
 """)
-
-with col_right:
-    st.markdown("**Active headcount by department**")
-    st.dataframe(dept.rename(columns={'Department': 'Dept', 'n': 'Active'}), hide_index=True, use_container_width=True)
