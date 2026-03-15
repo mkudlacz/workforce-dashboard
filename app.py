@@ -60,18 +60,45 @@ with col_left:
     st.markdown("""
 **About this dataset**
 
-This database models a company that has been operating for ~16 years — the product of a
-merger between two organizations. Records begin partway through the company's history,
-mimicking an HCM system populated for an existing workforce rather than tracking the
-company from its founding.
+This is a fictional mid-size tech company — built from scratch in Python, one week at a time.
+The simulation runs from January 2015 through early 2026: ~585 Monday snapshots, each capturing
+every active employee's department, role, engagement score, performance rating, manager, and more.
+
+The company starts at around 3,200 employees, grows steadily through 2022 to just over 5,100,
+then contracts. That arc isn't hardcoded — it emerges from a target headcount curve with
+mean-reverting noise, a hiring function that responds to gaps with realistic lag, and a monthly
+recruiting capacity budget that prevents the unrealistic week-to-week spikes real data never shows.
+
+Attrition is where things get interesting. Voluntary and involuntary rates are built from stacked
+multipliers: your tenure, your performance rating, your engagement score, your manager's exit
+history, and the time of year (March is rough — equity vests, and people leave). Department
+multipliers mean Sales churns at 1.5x the baseline; Legal barely moves.
+
+Layered on top: 1–3 RIF events, drawn from four real historical windows — the 2016 growth
+correction, COVID, the 2022 rate shock, and the 2023 peak tech layoffs. Each one triggers a
+hiring freeze, an engagement shock, and a slow recovery that you can see in the data.
+
+Manager quality is baked in at hire — each manager is tagged as poor, star, or neutral, and that
+tag quietly shapes the engagement scores and attrition rates of everyone in their reporting chain,
+up to two levels deep, for as long as they're here. Engineering and Operations got the best
+management cultures. Sales got the worst.
+
+The result is a dataset with real texture: seasonal patterns, RIF fingerprints, engagement
+divergence by department, tenure effects on attrition. It behaves the way workforce data
+actually behaves — which makes it genuinely useful for building and testing analytics.
 
 | Page | What you'll find |
 |---|---|
 | 📈 Headcount | Workforce size over time, hiring & attrition flows, dept composition |
 | 📉 Attrition | Organic vol/invol rates, RIF events, attrition by tenure/rating/dept |
-| 🏢 Org Health | Span of control, org layer depth by dept, manager % over time |
+| 🏢 Org Health | Span of control, org layers by dept, manager % over time |
 | 💬 Engagement & Performance | Engagement trends, RIF shocks, rating distribution, cross-tabs |
 | 🌍 Demographics | Gender, race/ethnicity, location — current state and over time |
+| 🔥 Attrition Heatmap | Year × department view, toggle by termination type |
+| 📊 Attrition Breakdown | Annual attrition trends faceted by department |
+| 💡 Engagement Heatmap | Year × department engagement with sparklines |
+| 🚀 Promotions & Moves | Band promotions, IC→manager conversions, cross-dept transfers |
+| 🔍 Employee Explorer | Filterable employee roster with engagement and rating detail |
 """)
 
 with col_right:
