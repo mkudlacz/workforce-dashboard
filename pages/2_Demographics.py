@@ -5,7 +5,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from db import run_query, DEPT_COLORS, GENDER_COLORS
+from db import run_query, DEPT_COLORS, GENDER_COLORS, RACE_COLORS, LOCATION_COLORS
 from filters import render_sidebar_filter
 
 st.title("Demographics")
@@ -81,19 +81,19 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     fig1 = px.pie(gender, names='Gender', values='n', title='Gender',
-                  color_discrete_sequence=px.colors.qualitative.Pastel)
+                  color_discrete_map=GENDER_COLORS)
     fig1.update_traces(textinfo='percent+label')
     st.plotly_chart(fig1, use_container_width=True)
 
 with col2:
     fig2 = px.pie(race, names='RaceEthnicity', values='n', title='Race / Ethnicity',
-                  color_discrete_sequence=px.colors.qualitative.Set3)
+                  color_discrete_map=RACE_COLORS)
     fig2.update_traces(textinfo='percent+label')
     st.plotly_chart(fig2, use_container_width=True)
 
 with col3:
     fig3 = px.pie(location, names='Location', values='n', title='Location',
-                  color_discrete_sequence=px.colors.qualitative.Pastel1)
+                  color_discrete_map=LOCATION_COLORS)
     fig3.update_traces(textinfo='percent+label')
     st.plotly_chart(fig3, use_container_width=True)
 
@@ -132,6 +132,7 @@ with col4:
         race_dept_pct, x='Department', y='pct', color='RaceEthnicity',
         labels={'pct': '% of Dept', 'Department': '', 'RaceEthnicity': 'Race/Ethnicity'},
         barmode='stack',
+        color_discrete_map=RACE_COLORS,
     )
     fig5.update_layout(legend=dict(orientation='h', y=-0.3), xaxis={'tickangle': -30})
     st.plotly_chart(fig5, use_container_width=True)

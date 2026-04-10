@@ -40,6 +40,29 @@ GENDER_COLORS = {
     'Not Declared': '#4A7D96',
 }
 
+# Race/ethnicity colors — spread across brand palette, no cultural mapping implied
+RACE_COLORS = {
+    'White':             '#F2CC8F',   # Pale Sand
+    'Asian':             '#3A7CA5',   # PRIMARY
+    'Black':             '#2C5F7A',   # PRIMARY_DK
+    'Hispanic':          '#81B29A',   # SAGE
+    'Two or More Races': '#5A9DC0',   # lighter blue
+    'Other':             '#EC9B80',   # light coral
+}
+
+# Location colors
+LOCATION_COLORS = {
+    'US':     '#3A7CA5',   # PRIMARY
+    'Canada': '#81B29A',   # SAGE
+    'UK':     '#F2CC8F',   # Pale Sand
+}
+
+# Org layer sequential (light → dark blue, layers 1–8)
+LAYER_COLORS = {
+    '1': '#C8DFF0', '2': '#A0C4E2', '3': '#72A9D5', '4': '#4D8EC6',
+    '5': '#3A7CA5', '6': '#2C5F7A', '7': '#1E4560', '8': '#0F2B3D',
+}
+
 # Sankey / band type colors
 BAND_IC_COLOR  = '#3A7CA5'   # IC bands
 BAND_MGR_COLOR = '#2C5F7A'   # Manager bands

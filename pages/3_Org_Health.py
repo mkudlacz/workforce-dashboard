@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from db import run_query, DEPT_COLORS, PRIMARY, PRIMARY_DK, SAGE
+from db import run_query, DEPT_COLORS, PRIMARY, PRIMARY_DK, SAGE, VOL_COLOR, LAYER_COLORS
 from filters import render_sidebar_filter
 
 st.title("Org Health")
@@ -115,6 +115,7 @@ fig2 = px.bar(
     labels={'n': 'Employees', 'OrgLayer': 'Layer', 'Department': ''},
     barmode='stack',
     category_orders={'OrgLayer': [str(i) for i in range(1, 10)]},
+    color_discrete_map=LAYER_COLORS,
 )
 fig2.update_layout(legend_title='Org Layer', legend=dict(orientation='h', y=-0.2))
 st.plotly_chart(fig2, use_container_width=True)
@@ -131,9 +132,9 @@ fig3 = px.line(
     labels={'SnapDate': '', 'mgr_pct': 'Manager %'},
 )
 fig3.update_traces(line_color=SAGE)
-fig3.add_hline(y=25, line_dash='dot', line_color='orange',
+fig3.add_hline(y=25, line_dash='dot', line_color=VOL_COLOR,
                annotation_text='25% upper bound', annotation_position='bottom right')
-fig3.add_hline(y=10, line_dash='dot', line_color='green',
+fig3.add_hline(y=10, line_dash='dot', line_color=SAGE,
                annotation_text='10% lower bound', annotation_position='top right')
 fig3.update_layout(hovermode='x unified')
 st.plotly_chart(fig3, use_container_width=True)
