@@ -14,7 +14,10 @@ st.set_page_config(
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-html, body, [class*="css"], .stMarkdown, .stText, div, p, span, label {
+html, body { font-family: 'Inter', sans-serif !important; }
+p, li, td, th, label, input, textarea, select, button,
+.stMarkdown, .stText, .stDataFrame, .stCaption,
+[data-testid="stSidebar"] a, [data-testid="stSidebar"] p {
     font-family: 'Inter', sans-serif !important;
 }
 h1, h2, h3, h4, h5, h6 {
