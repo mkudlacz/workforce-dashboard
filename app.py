@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from pathlib import Path
 from PIL import Image
 from db import run_query
@@ -115,3 +116,24 @@ pg = st.navigation(
 )
 
 pg.run()
+
+# Collapse all nav sections by default on first load.
+# Uses window.parent because st.components runs inside an iframe.
+components.html("""
+<script>
+(function() {
+    function collapseNav() {
+        var doc = window.parent.document;
+        var buttons = doc.querySelectorAll(
+            '[data-testid="stSidebar"] button[aria-expanded="true"]'
+        );
+        if (buttons.length === 0) {
+            setTimeout(collapseNav, 150);
+            return;
+        }
+        buttons.forEach(function(b) { b.click(); });
+    }
+    setTimeout(collapseNav, 400);
+})();
+</script>
+""", height=0)
