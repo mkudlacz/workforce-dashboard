@@ -5,7 +5,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from db import run_query, DEPT_COLORS, RATING_ORDER, RATING_COLORS, PRIMARY
+from db import run_query, DEPT_COLORS, RATING_ORDER, RATING_COLORS, PRIMARY, RIF_COLOR
 from filters import render_sidebar_filter
 
 st.title("Engagement & Performance")
@@ -154,7 +154,7 @@ fig2 = px.line(
 )
 fig2.update_traces(line_color=PRIMARY)
 for rif_dt in rif_dates:
-    fig2.add_vline(x=rif_dt.isoformat(), line_dash='dash', line_color='red', opacity=0.6)
+    fig2.add_vline(x=rif_dt.isoformat(), line_dash='dash', line_color=RIF_COLOR, opacity=0.6)
 fig2.update_layout(hovermode='x unified')
 st.plotly_chart(fig2, use_container_width=True)
 
@@ -168,7 +168,7 @@ fig3 = px.bar(
     text='mean_eng',
 )
 fig3.update_traces(texttemplate='%{text:.1f}', textposition='outside')
-fig3.update_layout(showlegend=False, xaxis_range=[60, 85])
+fig3.update_layout(showlegend=False, xaxis_range=[60, 85], height=420, bargap=0.3)
 st.plotly_chart(fig3, use_container_width=True)
 
 st.divider()
