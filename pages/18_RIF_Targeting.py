@@ -121,11 +121,9 @@ fig_band.update_layout(
 )
 st.plotly_chart(fig_band, use_container_width=True)
 st.caption(
-    "Layoff concentration by job band. IC1–IC2 over-indexing reflects the typical "
-    "pattern of cutting early-career roles with less institutional knowledge and lower "
-    "replacement cost. The VP and senior manager bands carry the lowest over-index "
-    "— consistent with the 'preserve leadership continuity' logic that typically governs "
-    "restructuring decisions, even when those decisions reduce organizational agility."
+    "Layoff concentration by job band. M1 and M2 are the only bands meaningfully above 1.0; "
+    "IC bands sit just below proportional; VP is the most protected at 0.64x. "
+    "The pattern is middle management absorption, not IC reduction."
 )
 
 # ── Scatter: layoff% vs HC% by dept ──────────────────────────────────────────
@@ -192,14 +190,15 @@ with col1:
 
 with col2:
     st.info(
-        "**The band targeting logic**\n\n"
-        "IC1 and IC2 over-indexing reflects two forces: these bands contain the highest "
-        "ratio of 'replaceable generalists' to 'specialized contributors,' and they "
-        "represent the easiest scope for cost reduction without triggering the organizational "
-        "capability degradation that cutting IC3+ or M1+ would risk. The caution is "
-        "demographic: IC1–IC2 bands carry the highest concentration of early-career and "
-        "recently hired employees, which means layoff over-targeting at these levels is "
-        "disproportionately borne by employees who joined during the growth cycle and have "
-        "the least tenure-based anchoring to the organization. "
-        "That population, once cut, rarely returns."
+        "**Middle management absorbs the cuts**\n\n"
+        "The band pattern here does not follow the conventional IC-reduction playbook. "
+        "M1 (1.16x) and M2 (1.08x) are the only bands meaningfully over-indexed; IC bands "
+        "are all slightly below 1.0 and essentially proportional; VP is the most protected "
+        "tier at 0.64x. This is a flatten-the-middle-management structure, not a "
+        "cut-the-bottom pattern. The operational logic is recognizable: M1 and M2 roles "
+        "accumulate during growth cycles as team proliferation outpaces consolidation, and "
+        "they become visible targets when headcount scrutiny intensifies. The downstream "
+        "consequence is a temporarily wider span of control — managers who survive carry "
+        "larger teams with less coordination layer — which is visible in the org shape data "
+        "on the preceding page."
     )
