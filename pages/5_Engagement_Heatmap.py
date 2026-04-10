@@ -5,10 +5,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from db import run_query
+from db import run_query, SIMIANT_DIVERGING
 
-st.set_page_config(page_title="Engagement Heatmap", page_icon="🔥", layout="wide")
-st.title("🔥 Annual Engagement Heatmap")
+st.title("Annual Engagement Heatmap")
 
 
 @st.cache_data
@@ -50,7 +49,7 @@ pivot = pivot.loc[['All'] + dept_order]
 fig = px.imshow(
     pivot,
     labels=dict(x='Year', y='', color='Mean Eng.'),
-    color_continuous_scale='RdYlGn',
+    color_continuous_scale=SIMIANT_DIVERGING,
     aspect='auto',
     text_auto='.1f',
 )

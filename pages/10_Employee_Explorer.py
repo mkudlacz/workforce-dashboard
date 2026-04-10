@@ -6,8 +6,7 @@ import streamlit as st
 import pandas as pd
 from db import run_query, DEPT_COLORS
 
-st.set_page_config(page_title="Employee Explorer", page_icon="🔍", layout="wide")
-st.title("🔍 Employee Explorer")
+st.title("Employee Explorer")
 
 st.caption(
     "Browse and filter the full employee roster. "

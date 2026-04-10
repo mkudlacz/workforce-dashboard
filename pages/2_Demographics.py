@@ -5,11 +5,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from db import run_query, DEPT_COLORS
+from db import run_query, DEPT_COLORS, GENDER_COLORS
 from filters import render_sidebar_filter
 
-st.set_page_config(page_title="Demographics", page_icon="🌍", layout="wide")
-st.title("🌍 Demographics")
+st.title("Demographics")
 
 start_date, end_date = render_sidebar_filter()
 
@@ -115,7 +114,7 @@ pct_long = pivot.melt(id_vars='SnapDate', value_vars=['Female %', 'Male %'],
 fig4 = px.line(
     pct_long, x='SnapDate', y='pct', color='Gender',
     labels={'SnapDate': '', 'pct': '% of Active Workforce', 'Gender': ''},
-    color_discrete_map={'Female %': '#EF553B', 'Male %': '#636EFA'},
+    color_discrete_map={'Female %': GENDER_COLORS['Female'], 'Male %': GENDER_COLORS['Male']},
 )
 fig4.add_hline(y=50, line_dash='dot', line_color='grey', opacity=0.5)
 fig4.update_layout(hovermode='x unified', yaxis_range=[40, 60])
@@ -148,7 +147,7 @@ with col5:
         labels={'pct': '% of Band', 'JobBand': 'Job Band', 'Gender': ''},
         barmode='stack',
         category_orders={'JobBand': band_order},
-        color_discrete_map={'Female': '#EF553B', 'Male': '#636EFA'},
+        color_discrete_map={'Female': GENDER_COLORS['Female'], 'Male': GENDER_COLORS['Male']},
     )
     fig6.add_hline(y=50, line_dash='dot', line_color='grey', opacity=0.5)
     fig6.update_layout(legend=dict(orientation='h', y=-0.2))

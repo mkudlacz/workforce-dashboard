@@ -5,11 +5,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from db import run_query, DEPT_COLORS
+from db import run_query, DEPT_COLORS, VOL_COLOR, INVOL_COLOR, LAYOFF_COLOR, PRIMARY
 from filters import render_sidebar_filter
 
-st.set_page_config(page_title="Headcount", page_icon="📈", layout="wide")
-st.title("📈 Headcount & Workforce Composition")
+st.title("Headcount & Workforce Composition")
 
 start_date, end_date = render_sidebar_filter()
 
@@ -123,7 +122,7 @@ st.divider()
 st.subheader("Active Headcount Over Time")
 fig1 = px.line(hc, x='SnapDate', y='active_hc',
                labels={'SnapDate': '', 'active_hc': 'Active Employees'})
-fig1.update_traces(line_color='#636EFA')
+fig1.update_traces(line_color=PRIMARY)
 fig1.update_layout(hovermode='x unified')
 st.plotly_chart(fig1, use_container_width=True)
 
@@ -156,7 +155,7 @@ with col1:
         flow, x='month', y='new_hires',
         labels={'month': '', 'new_hires': 'New Hires'},
         title='New Hires per Month',
-        color_discrete_sequence=['#636EFA'],
+        color_discrete_sequence=[PRIMARY],
     )
     st.plotly_chart(fig3a, use_container_width=True)
 
@@ -168,7 +167,7 @@ with col2:
         term_long, x='month', y='n', color='Type',
         labels={'month': '', 'n': 'Terminations', 'Type': ''},
         title='Terminations per Month',
-        color_discrete_map={'Voluntary': '#00CC96', 'Involuntary': '#FFA15A', 'Layoff': '#EF553B'},
+        color_discrete_map={'Voluntary': VOL_COLOR, 'Involuntary': INVOL_COLOR, 'Layoff': LAYOFF_COLOR},
         barmode='stack',
     )
     st.plotly_chart(fig3b, use_container_width=True)

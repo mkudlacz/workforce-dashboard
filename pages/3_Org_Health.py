@@ -7,11 +7,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from db import run_query, DEPT_COLORS
+from db import run_query, DEPT_COLORS, PRIMARY, PRIMARY_DK, SAGE
 from filters import render_sidebar_filter
 
-st.set_page_config(page_title="Org Health", page_icon="🏢", layout="wide")
-st.title("🏢 Org Health")
+st.title("Org Health")
 
 start_date, end_date = render_sidebar_filter()
 
@@ -103,7 +102,7 @@ st.subheader(f"Span of Control Distribution (as of {end_date})")
 fig1 = px.histogram(
     span, x='direct_reports', nbins=30,
     labels={'direct_reports': 'Direct Reports', 'count': 'Managers'},
-    color_discrete_sequence=['#636EFA'],
+    color_discrete_sequence=[PRIMARY],
 )
 fig1.update_layout(bargap=0.05)
 st.plotly_chart(fig1, use_container_width=True)
@@ -131,7 +130,7 @@ fig3 = px.line(
     monthly_mgr, x='SnapDate', y='mgr_pct',
     labels={'SnapDate': '', 'mgr_pct': 'Manager %'},
 )
-fig3.update_traces(line_color='#AB63FA')
+fig3.update_traces(line_color=SAGE)
 fig3.add_hline(y=25, line_dash='dot', line_color='orange',
                annotation_text='25% upper bound', annotation_position='bottom right')
 fig3.add_hline(y=10, line_dash='dot', line_color='green',
@@ -174,14 +173,14 @@ fig4.add_trace(go.Bar(
     x=pivot4['ic'], y=pivot4['OrgLayer'],
     base=pivot4['ic_base'].tolist(),
     orientation='h', name='Individual Contributor',
-    marker_color='#636EFA',
+    marker_color=PRIMARY,
     text=pivot4['ic'].astype(int), textposition='inside',
 ))
 fig4.add_trace(go.Bar(
     x=pivot4['mgr'], y=pivot4['OrgLayer'],
     base=pivot4['mgr_base'].tolist(),
     orientation='h', name='Manager',
-    marker_color='#EF553B',
+    marker_color=PRIMARY_DK,
     text=pivot4['mgr'].astype(int), textposition='inside',
 ))
 fig4.update_layout(
@@ -221,7 +220,7 @@ for i, dept in enumerate(depts):
         x=df_dept['ic'], y=df_dept['OrgLayer'],
         base=df_dept['ic_base'].tolist(),
         orientation='h', name='Individual Contributor',
-        marker_color='#636EFA', legendgroup='ic',
+        marker_color=PRIMARY, legendgroup='ic',
         text=df_dept['ic'].astype(int), textposition='inside',
         showlegend=show,
     ), row=row, col=col)
@@ -229,7 +228,7 @@ for i, dept in enumerate(depts):
         x=df_dept['mgr'], y=df_dept['OrgLayer'],
         base=df_dept['mgr_base'].tolist(),
         orientation='h', name='Manager',
-        marker_color='#EF553B', legendgroup='mgr',
+        marker_color=PRIMARY_DK, legendgroup='mgr',
         text=df_dept['mgr'].astype(int), textposition='inside',
         showlegend=show,
     ), row=row, col=col)

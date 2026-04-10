@@ -5,10 +5,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from db import run_query, DEPT_COLORS
+from db import run_query, DEPT_COLORS, SIMIANT_DIVERGING_R
 
-st.set_page_config(page_title="Attrition Heatmap", page_icon="🗺️", layout="wide")
-st.title("🗺️ Annual Attrition Heatmap")
+st.title("Annual Attrition Heatmap")
 
 
 @st.cache_data
@@ -85,7 +84,7 @@ pivot = pivot.loc[['All'] + dept_order]
 fig = px.imshow(
     pivot,
     labels=dict(x='Year', y='', color='Attrition %'),
-    color_continuous_scale='RdYlGn_r',
+    color_continuous_scale=SIMIANT_DIVERGING_R,
     aspect='auto',
     text_auto='.1f',
 )

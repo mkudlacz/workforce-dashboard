@@ -5,22 +5,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from db import run_query, DEPT_COLORS, RATING_ORDER
+from db import run_query, DEPT_COLORS, RATING_ORDER, RATING_COLORS, PRIMARY
 from filters import render_sidebar_filter
 
-st.set_page_config(page_title="Engagement & Performance", page_icon="💬", layout="wide")
-st.title("💬 Engagement & Performance")
+st.title("Engagement & Performance")
 
 start_date, end_date = render_sidebar_filter()
 
-# Red → yellow → green, one color per rating tier (worst → best)
-RATING_COLORS = {
-    'Below Expectations':     '#d62728',
-    'Inconsistent Performer': '#ff7f0e',
-    'Meets Expectations':     '#ffd700',
-    'High Performer':         '#2ca02c',
-    'Exceeds Expectations':   '#006400',
-}
 
 
 @st.cache_data
@@ -145,7 +136,7 @@ st.subheader("Engagement Score Distribution")
 fig1 = px.histogram(
     eng_dist, x='EngagementIndex', nbins=60,
     labels={'EngagementIndex': 'Engagement Score', 'count': 'Snapshot Count'},
-    color_discrete_sequence=['#636EFA'],
+    color_discrete_sequence=[PRIMARY],
 )
 fig1.update_layout(bargap=0.02)
 st.plotly_chart(fig1, use_container_width=True)
@@ -161,7 +152,7 @@ fig2 = px.line(
     monthly_eng, x='SnapDate', y='mean_eng',
     labels={'SnapDate': '', 'mean_eng': 'Mean Engagement Score'},
 )
-fig2.update_traces(line_color='#636EFA')
+fig2.update_traces(line_color=PRIMARY)
 for rif_dt in rif_dates:
     fig2.add_vline(x=rif_dt.isoformat(), line_dash='dash', line_color='red', opacity=0.6)
 fig2.update_layout(hovermode='x unified')

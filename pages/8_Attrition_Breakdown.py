@@ -5,15 +5,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from db import run_query, DEPT_COLORS
+from db import run_query, DEPT_COLORS, VOL_COLOR, INVOL_COLOR, LAYOFF_COLOR
 
-st.set_page_config(page_title="Attrition Breakdown", page_icon="📊", layout="wide")
-st.title("📊 Attrition Breakdown by Department")
+st.title("Attrition Breakdown by Department")
 
 RESIGN_COLORS = {
-    'Voluntary':   '#636EFA',
-    'Involuntary': '#EF553B',
-    'Layoff':      '#FFA15A',
+    'Voluntary':   VOL_COLOR,
+    'Involuntary': INVOL_COLOR,
+    'Layoff':      LAYOFF_COLOR,
 }
 
 RESIGN_ORDER = ['Voluntary', 'Involuntary', 'Layoff']

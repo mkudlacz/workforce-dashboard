@@ -7,11 +7,10 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
-from db import run_query, DEPT_COLORS
+from db import run_query, DEPT_COLORS, BAND_IC_COLOR, BAND_MGR_COLOR, BAND_VP_COLOR, PRIMARY
 from filters import render_sidebar_filter
 
-st.set_page_config(page_title="Promotions & Moves", page_icon="📈", layout="wide")
-st.title("📈 Promotions & Cross-Department Moves")
+st.title("Promotions & Cross-Department Moves")
 
 start_date, end_date = render_sidebar_filter()
 
@@ -124,11 +123,11 @@ else:
     for b in src_bands + tgt_bands:
         real_band = b.replace('From ', '').replace('To ', '') if ' ' in b else b
         if real_band.startswith('IC'):
-            node_colors.append('#636EFA')
+            node_colors.append(BAND_IC_COLOR)
         elif real_band.startswith('M'):
-            node_colors.append('#EF553B')
+            node_colors.append(BAND_MGR_COLOR)
         else:
-            node_colors.append('#AB63FA')
+            node_colors.append(BAND_VP_COLOR)
 
     fig_sankey = go.Figure(data=[go.Sankey(
         arrangement="snap",
@@ -239,27 +238,47 @@ else:
 
     st.divider()
 
+    # ── Sankey: source dept → destination dept ────────────────
+    st.subheader("Department Move Flow")
+    top_pairs = (
+        moves.groupby(['prev_dept', 'Department'], as_index=False)
+        .agg(employees=('EmployeeID', 'nunique'))
+        .sort_values('employees', ascending=False)
+        .head(15)
+    )
+
+    src_depts = sorted(top_pairs['prev_dept'].unique())
+    tgt_depts = sorted(top_pairs['Department'].unique())
+    node_labels = [f"From {d}" for d in src_depts] + [f"To {d}" for d in tgt_depts]
+    src_idx = {d: i for i, d in enumerate(src_depts)}
+    tgt_idx = {d: i + len(src_depts) for i, d in enumerate(tgt_depts)}
+    node_colors = (
+        [DEPT_COLORS.get(d, '#888') for d in src_depts] +
+        [DEPT_COLORS.get(d, '#888') for d in tgt_depts]
+    )
+
+    fig_moves_sankey = go.Figure(data=[go.Sankey(
+        arrangement="snap",
+        node=dict(
+            pad=15, thickness=20,
+            line=dict(color="gray", width=0.5),
+            label=node_labels,
+            color=node_colors,
+        ),
+        link=dict(
+            source=top_pairs['prev_dept'].map(src_idx).tolist(),
+            target=top_pairs['Department'].map(tgt_idx).tolist(),
+            value=top_pairs['employees'].tolist(),
+            hovertemplate="%{source.label} → %{target.label}<br>Employees: %{value}<extra></extra>",
+        ),
+    )])
+    fig_moves_sankey.update_layout(height=500, margin=dict(l=20, r=20, t=20, b=20))
+    st.plotly_chart(fig_moves_sankey, use_container_width=True)
+    st.caption("Top 15 source → destination pairs by unique employees moved.")
+
     col_c, col_d = st.columns(2)
 
     with col_c:
-        st.subheader("Top Source → Destination Pairs")
-        pairs = (
-            moves.groupby(['prev_dept', 'Department'], as_index=False)
-            .agg(employees=('EmployeeID', 'nunique'), events=('EmployeeID', 'count'))
-            .sort_values('employees', ascending=False)
-            .head(15)
-        )
-        pairs['flow'] = pairs['prev_dept'] + ' → ' + pairs['Department']
-        fig_pairs = px.bar(
-            pairs.sort_values('employees', ascending=True),
-            x='employees', y='flow', orientation='h',
-            labels={'employees': 'Employees', 'flow': ''},
-            color_discrete_sequence=['#19D3F3'],
-        )
-        fig_pairs.update_layout(height=450)
-        st.plotly_chart(fig_pairs, use_container_width=True)
-
-    with col_d:
         st.subheader("Quarterly Move Trend")
         moves['quarter'] = moves['SnapDate'].dt.to_period('Q').astype(str)
         move_q = (
@@ -268,32 +287,29 @@ else:
             .sort_values('quarter')
         )
         move_q['quarter_dt'] = pd.PeriodIndex(move_q['quarter'], freq='Q').to_timestamp()
-
         fig_mq = px.line(
             move_q, x='quarter_dt', y='employees_moved', markers=True,
             labels={'quarter_dt': '', 'employees_moved': 'Employees Moved'},
-            color_discrete_sequence=['#19D3F3'],
+            color_discrete_sequence=[PRIMARY],
         )
         st.plotly_chart(fig_mq, use_container_width=True)
 
-    # ── Net flow by department ─────────────────────────────────
-    st.subheader("Net Flow by Department")
-    st.caption("Positive = net receiver of talent. Negative = net exporter.")
-
-    outflow = moves.groupby('prev_dept', as_index=False).agg(out=('EmployeeID', 'nunique'))
-    inflow  = moves.groupby('Department', as_index=False).agg(into=('EmployeeID', 'nunique'))
-    net = (
-        outflow.rename(columns={'prev_dept': 'Department'})
-        .merge(inflow, on='Department', how='outer')
-        .fillna(0)
-    )
-    net['net'] = (net['into'] - net['out']).astype(int)
-    net = net.sort_values('net')
-
-    fig_net = px.bar(
-        net, x='net', y='Department', orientation='h',
-        color='Department', color_discrete_map=DEPT_COLORS,
-        labels={'net': 'Net Employees (In − Out)', 'Department': ''},
-    )
-    fig_net.update_layout(showlegend=False)
-    st.plotly_chart(fig_net, use_container_width=True)
+    with col_d:
+        st.subheader("Net Flow by Department")
+        st.caption("Positive = net receiver of talent. Negative = net exporter.")
+        outflow = moves.groupby('prev_dept', as_index=False).agg(out=('EmployeeID', 'nunique'))
+        inflow  = moves.groupby('Department', as_index=False).agg(into=('EmployeeID', 'nunique'))
+        net = (
+            outflow.rename(columns={'prev_dept': 'Department'})
+            .merge(inflow, on='Department', how='outer')
+            .fillna(0)
+        )
+        net['net'] = (net['into'] - net['out']).astype(int)
+        net = net.sort_values('net')
+        fig_net = px.bar(
+            net, x='net', y='Department', orientation='h',
+            color='Department', color_discrete_map=DEPT_COLORS,
+            labels={'net': 'Net Employees (In − Out)', 'Department': ''},
+        )
+        fig_net.update_layout(showlegend=False)
+        st.plotly_chart(fig_net, use_container_width=True)

@@ -6,11 +6,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
-from db import run_query, DEPT_COLORS, RATING_ORDER, TENURE_ORDER
+from db import run_query, DEPT_COLORS, RATING_ORDER, TENURE_ORDER, VOL_COLOR, INVOL_COLOR, LAYOFF_COLOR, RIF_COLOR
 from filters import render_sidebar_filter
 
-st.set_page_config(page_title="Attrition", page_icon="📉", layout="wide")
-st.title("📉 Attrition Analysis")
+st.title("Attrition Analysis")
 
 start_date, end_date = render_sidebar_filter()
 
@@ -168,11 +167,11 @@ rate_long['Type'] = rate_long['Type'].map({'vol_rate': 'Voluntary', 'invol_rate'
 fig1 = px.area(
     rate_long, x='SnapDate', y='annual_rate', color='Type',
     labels={'SnapDate': '', 'annual_rate': 'Annualized Rate (%)', 'Type': ''},
-    color_discrete_map={'Voluntary': '#636EFA', 'Involuntary': '#FFA15A'},
+    color_discrete_map={'Voluntary': VOL_COLOR, 'Involuntary': INVOL_COLOR},
     category_orders={'Type': ['Involuntary', 'Voluntary']},  # Voluntary on bottom
 )
 for rif_dt in rif_dates:
-    fig1.add_vline(x=rif_dt.isoformat(), line_dash='dash', line_color='red', opacity=0.6)
+    fig1.add_vline(x=rif_dt.isoformat(), line_dash='dash', line_color=RIF_COLOR, opacity=0.6)
 fig1.update_layout(hovermode='x unified', legend=dict(orientation='h', y=-0.15))
 st.plotly_chart(fig1, use_container_width=True)
 
@@ -183,11 +182,11 @@ monthly_terms['month'] = pd.to_datetime(monthly_terms['month'] + '-01')
 fig2 = px.bar(
     monthly_terms.sort_values('month'), x='month', y='n', color='ResignationType',
     labels={'month': '', 'n': 'Terminations', 'ResignationType': 'Type'},
-    color_discrete_map={'Voluntary': '#00CC96', 'Involuntary': '#FFA15A', 'Layoff': '#EF553B'},
+    color_discrete_map={'Voluntary': VOL_COLOR, 'Involuntary': INVOL_COLOR, 'Layoff': LAYOFF_COLOR},
     barmode='stack',
 )
 for rif_dt in rif_dates:
-    fig2.add_vline(x=rif_dt.isoformat(), line_dash='dash', line_color='red', opacity=0.4)
+    fig2.add_vline(x=rif_dt.isoformat(), line_dash='dash', line_color=RIF_COLOR, opacity=0.4)
 fig2.update_layout(legend=dict(orientation='h', y=-0.2))
 st.plotly_chart(fig2, use_container_width=True)
 
@@ -213,7 +212,7 @@ def add_total_labels_v(fig, df, x_col, total_col):
             font=dict(size=11),
         )
 
-VOL_INVOL_COLORS = {'Voluntary': '#636EFA', 'Involuntary': '#FFA15A'}
+VOL_INVOL_COLORS = {'Voluntary': VOL_COLOR, 'Involuntary': INVOL_COLOR}
 
 col1, col2, col3 = st.columns(3)
 
