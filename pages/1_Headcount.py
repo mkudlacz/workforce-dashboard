@@ -110,8 +110,9 @@ fig_dept = px.bar(
 )
 fig_dept.update_layout(
     showlegend=False,
-    height=320,
-    margin=dict(l=0, r=20, t=20, b=20),
+    height=420,
+    margin=dict(l=0, r=60, t=20, b=20),
+    bargap=0.3,
 )
 fig_dept.update_traces(texttemplate='%{x:,}', textposition='outside')
 st.plotly_chart(fig_dept, use_container_width=True)
